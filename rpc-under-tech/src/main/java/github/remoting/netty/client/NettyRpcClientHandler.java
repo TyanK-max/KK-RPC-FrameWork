@@ -24,29 +24,37 @@ import java.net.InetSocketAddress;
 @Slf4j
 public class NettyRpcClientHandler extends SimpleChannelInboundHandler {
     private final NettyRpcClient nettyRpcClient;
+    private final UnprocessedRequest unprocessedRequest;
 
     public NettyRpcClientHandler() {
         this.nettyRpcClient = SingletonFactory.getInstance(NettyRpcClient.class);
+        this.unprocessedRequest = SingletonFactory.getInstance(UnprocessedRequest.class);
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if(msg instanceof RpcMessage){
-            byte messageType = ((RpcMessage) msg).getMessageType();
-            if(messageType == RpcConstants.HEARTBEAT_RESPONSE_TYPE){
-                log.info("client ❤ ping");
-            }else{
-                log.info("client receive msg : [{}]",msg);
+        log.info("client receive msg : [{}]", msg);
+        if (msg instanceof RpcMessage) {
+            RpcMessage tmp = (RpcMessage) msg;
+            byte messageType = tmp.getMessageType();
+            if (messageType == RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
+                log.info("server ❤ [{}]", tmp.getData());
+            } else if(messageType == RpcConstants.RESPONSE_TYPE){
+                RpcResponse<Object> rpcResponse = (RpcResponse<Object>) tmp.getData();
+                unprocessedRequest.complete(rpcResponse);
             }
         }
     }
 
+    /**
+     * send heartbeat msg
+     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent){
+        if (evt instanceof IdleStateEvent) {
             IdleState state = ((IdleStateEvent) evt).state();
-            if(state == IdleState.WRITER_IDLE){
-                log.info("Write idle happen [{}]",ctx.channel().remoteAddress());
+            if (state == IdleState.WRITER_IDLE) {
+                log.info("Write idle happen [{}]", ctx.channel().remoteAddress());
                 Channel channel = nettyRpcClient.getChannel((InetSocketAddress) ctx.channel().remoteAddress());
                 RpcMessage rpcMessage = new RpcMessage();
                 rpcMessage.setCodec(SerializationTypeEnum.KRYO.getCode());
@@ -55,14 +63,14 @@ public class NettyRpcClientHandler extends SimpleChannelInboundHandler {
                 rpcMessage.setData(RpcConstants.PONG);
                 channel.writeAndFlush(rpcMessage).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
             }
-        }else{
-            super.userEventTriggered(ctx,evt);
+        } else {
+            super.userEventTriggered(ctx, evt);
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("client catch exception : ",cause);
+        log.error("client catch exception : ", cause);
         cause.printStackTrace();
         ctx.channel().close();
     }

@@ -1,10 +1,13 @@
 package github.remoting.netty.server;
 
 import cn.hutool.core.util.RuntimeUtil;
+import github.config.CustomShutdownHook;
 import github.config.RpcServiceConfig;
 import github.factory.SingletonFactory;
 import github.provider.ServiceProvider;
 import github.provider.ZkServiceProvider;
+import github.remoting.netty.codec.RpcMessageDecoder;
+import github.remoting.netty.codec.RpcMessageEncoder;
 import github.utils.concurrent.threadpool.ThreadPoolFactoryUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -30,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class NettyRpcServer {
-    public static final int PORT = 2200;
+    public static final int PORT = 8848;
     
     private ServiceProvider serviceProvider = SingletonFactory.getInstance(ZkServiceProvider.class);
     public void registerService(RpcServiceConfig rpcServiceConfig){
@@ -39,6 +42,7 @@ public class NettyRpcServer {
     
     @SneakyThrows
     public void start(){
+        CustomShutdownHook.getCustomShutdownHook().clearAll();
         String host = InetAddress.getLocalHost().getHostAddress();
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -61,7 +65,10 @@ public class NettyRpcServer {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline p = ch.pipeline();
+                            // IdleStateHandler 空闲状态处理器 30 秒之内没有读取到数据就关闭连接
                             p.addLast(new IdleStateHandler(30,0,0, TimeUnit.SECONDS));
+                            p.addLast(new RpcMessageDecoder());
+                            p.addLast(new RpcMessageEncoder());
                             p.addLast(serviceHandlerGroup,new NettyRpcServerHandler());
                         }
                     });

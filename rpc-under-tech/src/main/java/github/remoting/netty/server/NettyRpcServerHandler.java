@@ -35,18 +35,19 @@ public class NettyRpcServerHandler extends SimpleChannelInboundHandler {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof RpcMessage){
-            log.info("server receive msg: [{}] ",msg);
             byte messageType = ((RpcMessage) msg).getMessageType();
             RpcMessage rpcMessage = new RpcMessage();
             rpcMessage.setCodec(SerializationTypeEnum.KRYO.getCode());
             rpcMessage.setCompress(CompressTypeEnum.GZIP.getCode());
             if (messageType == RpcConstants.HEARTBEAT_REQUEST_TYPE){
+                log.info("client ❤ [{}]",((RpcMessage) msg).getData());
                 rpcMessage.setMessageType(RpcConstants.HEARTBEAT_RESPONSE_TYPE);
                 rpcMessage.setData(RpcConstants.PONG);
             }else{
+                log.info("server receive msg: [{}] ",msg);
                 RpcRequest rpcRequest = (RpcRequest) ((RpcMessage) msg).getData();
                 Object result = requestHandler.handle(rpcRequest);
-                log.info(StrUtil.format("server get result : %s",result.toString()));
+                log.info(StrUtil.format("server get result : {}",result.toString()));
                 rpcMessage.setMessageType(RpcConstants.RESPONSE_TYPE);
                 if(ctx.channel().isActive() && ctx.channel().isWritable()){
                     RpcResponse<Object> rpcResponse = RpcResponse.success(result, rpcRequest.getRequestId());
@@ -70,8 +71,7 @@ public class NettyRpcServerHandler extends SimpleChannelInboundHandler {
             IdleState state = ((IdleStateEvent) evt).state();
             // if the IdleEvent is read_idle ,mean the server don't read anything within 30 sec;
             if (state == IdleState.READER_IDLE){
-                log.info("idle check happen, we will close the connection for a while");
-                ctx.writeAndFlush("close right now");
+                log.info("idle check happen, we will close the connection in a while");
                 ctx.channel().close();
             }
         }else{

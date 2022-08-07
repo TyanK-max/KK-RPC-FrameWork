@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 public class RequestServiceHandler {
     private final ServiceProvider serviceProvider;
 
-    public RequestServiceHandler(ServiceProvider serviceProvider) {
+    public RequestServiceHandler() {
         this.serviceProvider = SingletonFactory.getInstance(ZkServiceProvider.class);
     }
     

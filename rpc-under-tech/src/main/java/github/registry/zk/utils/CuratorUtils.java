@@ -49,6 +49,7 @@ public final class CuratorUtils {
                 zkClient.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(path);
                 log.info("The node was created successfully. The node is:[{}]", path);
             }
+            REGISTERED_PATH_SET.add(path);
         } catch (Exception e) {
             e.printStackTrace();
         }

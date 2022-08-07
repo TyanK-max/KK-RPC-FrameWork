@@ -16,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author TyanK
- * @description: refer to dubbo SPI, 用来根据类名来获取实体类
+ * @description: refer to dubbo SPI, 用来根据类名来获取实体类, 服务发现
  * @date 2022/8/6 14:54
  */
 
@@ -24,7 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class ExtensionLoader<T> {
     
     // Resource 下面
-    private static final String SERVICE_DIRECTORY = "META-INF/extensions";
+    private static final String SERVICE_DIRECTORY = "META-INF/extensions/";
     private static final Map<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
     

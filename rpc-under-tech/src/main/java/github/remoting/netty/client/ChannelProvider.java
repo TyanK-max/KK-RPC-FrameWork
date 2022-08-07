@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChannelProvider {
     private final Map<String, Channel> channelMap;
 
-    public ChannelProvider(Map<String, Channel> channelMap) {
+    public ChannelProvider() {
         this.channelMap = new ConcurrentHashMap<>();
     }
 
