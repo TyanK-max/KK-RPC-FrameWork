@@ -1,2 +1,3 @@
 # KK-RPC-FrameWork
-RPC 学习框架
+### 用于个人学习的 RPC 框架
+### reference ： https://github.com/Snailclimb/guide-rpc-framework
