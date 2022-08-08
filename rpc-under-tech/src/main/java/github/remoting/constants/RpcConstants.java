@@ -2,6 +2,7 @@ package github.remoting.constants;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author wangtao .
@@ -28,5 +29,7 @@ public class RpcConstants {
     public static final String PING = "ping";
     public static final String PONG = "pong";
     public static final int MAX_FRAME_LENGTH = 8 * 1024 * 1024;
+    // times
+    public static final AtomicInteger MAX_IDLE_TIMES = new AtomicInteger(12);
 
 }

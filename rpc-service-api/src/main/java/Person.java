@@ -1,6 +1,4 @@
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 /**
  * @author TyanK
@@ -8,6 +6,7 @@ import lombok.Data;
  * @date 2022/8/7 17:19
  */
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Data
 public class Person {

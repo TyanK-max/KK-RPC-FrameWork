@@ -56,8 +56,10 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
     }
     
     private Object decodeFrame(ByteBuf in){
+        // read ByteBuf in order
         checkMagicNumber(in);
         checkVersion(in);
+        // magicNumber and version has been read so begin with full length.
         int fullLength = in.readInt();
         byte messageType = in.readByte();
         byte codecType = in.readByte();

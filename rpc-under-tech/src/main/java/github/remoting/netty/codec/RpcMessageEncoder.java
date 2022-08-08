@@ -35,42 +35,46 @@ public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
          *                       total is 16 Bytes
          *                       next is body
          */
-        out.writeBytes(RpcConstants.MAGIC_NUMBER); // 4B "grpc"
-        out.writeByte(RpcConstants.VERSION); // 1B
-        // leave a place to write the value of full length
-        out.writerIndex(out.writerIndex() + 4);
-        byte messageType = rpcMessage.getMessageType();
-        out.writeByte(messageType); // 1B
-        out.writeByte(rpcMessage.getCodec()); // 0x01 ---> 1B  "kryo"
-        out.writeByte(CompressTypeEnum.GZIP.getCode()); // 0x01 ---> 1B "gzip"
-        out.writeInt(ATOMIC_INTEGER.getAndIncrement()); // requestId 自增 Integer ---> 4B
-        // build full length
-        byte[] bodyBytes = null;
-        int fullLength = RpcConstants.HEAD_LENGTH; // 头部长度为16B
-        // if messageType is not heartbeat message,fullLength = head length + body length 排除心跳机制发送的报文
-        if (messageType != RpcConstants.HEARTBEAT_REQUEST_TYPE
-                && messageType != RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
-            // serialize the object
-            String codecName = SerializationTypeEnum.getName(rpcMessage.getCodec());
-            log.info("codec name: [{}] ", codecName);
-            Serializer serializer = ExtensionLoader.getExtensionLoader(Serializer.class)
-                    .getExtension(codecName);
-            bodyBytes = serializer.serialize(rpcMessage.getData());
-            // compress the bytes
-            String compressName = CompressTypeEnum.getName(rpcMessage.getCompress());
-            log.info("compress name: [{}]",compressName);
-            Compress compress = ExtensionLoader.getExtensionLoader(Compress.class)
-                    .getExtension(compressName);
-            bodyBytes = compress.compress(bodyBytes);
-            fullLength += bodyBytes.length;
-        }
+        try {
+            out.writeBytes(RpcConstants.MAGIC_NUMBER); // 4B "grpc"
+            out.writeByte(RpcConstants.VERSION); // 1B
+            // leave a place to write the value of full length
+            out.writerIndex(out.writerIndex() + 4);
+            byte messageType = rpcMessage.getMessageType();
+            out.writeByte(messageType); // 1B
+            out.writeByte(rpcMessage.getCodec()); // 0x01 ---> 1B  "kryo"
+            out.writeByte(CompressTypeEnum.GZIP.getCode()); // 0x01 ---> 1B "gzip"
+            out.writeInt(ATOMIC_INTEGER.getAndIncrement()); // requestId 自增 Integer ---> 4B
+            // build full length
+            byte[] bodyBytes = null;
+            int fullLength = RpcConstants.HEAD_LENGTH; // 头部长度为16B
+            // if messageType is not heartbeat message,fullLength = head length + body length 排除心跳机制发送的报文
+            if (messageType != RpcConstants.HEARTBEAT_REQUEST_TYPE
+                    && messageType != RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
+                // serialize the object
+                String codecName = SerializationTypeEnum.getName(rpcMessage.getCodec());
+                log.info("codec name: [{}] ", codecName);
+                Serializer serializer = ExtensionLoader.getExtensionLoader(Serializer.class)
+                        .getExtension(codecName);
+                bodyBytes = serializer.serialize(rpcMessage.getData());
+                // compress the bytes
+                String compressName = CompressTypeEnum.getName(rpcMessage.getCompress());
+                log.info("compress name: [{}]",compressName);
+                Compress compress = ExtensionLoader.getExtensionLoader(Compress.class)
+                        .getExtension(compressName);
+                bodyBytes = compress.compress(bodyBytes);
+                fullLength += bodyBytes.length;
+            }
 
-        if (bodyBytes != null) {
-            out.writeBytes(bodyBytes);
+            if (bodyBytes != null) {
+                out.writeBytes(bodyBytes);
+            }
+            int writeIndex = out.writerIndex(); // 先保存当前指针位置，存好之前预留的空间之后再返回当前位置
+            out.writerIndex(writeIndex - fullLength + RpcConstants.MAGIC_NUMBER.length + 1); // 加 1 是跳过版本号，到之前预留的缓冲区
+            out.writeInt(fullLength);
+            out.writerIndex(writeIndex); // 恢复指针位置
+        } catch (Exception e) {
+            log.error("Encode request error!");
         }
-        int writeIndex = out.writerIndex(); // 先保存当前指针位置，存好之前预留的空间之后再返回当前位置
-        out.writerIndex(writeIndex - fullLength + RpcConstants.MAGIC_NUMBER.length + 1); // 加 1 是跳过版本号，到之前预留的缓冲区
-        out.writeInt(fullLength);
-        out.writerIndex(writeIndex); // 恢复指针位置
     }
 }

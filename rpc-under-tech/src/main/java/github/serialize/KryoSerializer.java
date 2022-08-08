@@ -34,7 +34,7 @@ public class KryoSerializer implements Serializer {
         try(ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Output output = new Output(bos)){
             Kryo kryo = kryoThreadLocal.get();
-            // obj -> byte
+            // obj -> byte 需要对象有构造函数
             kryo.writeObject(output,obj);
             kryoThreadLocal.remove();
             return output.toBytes();
@@ -48,7 +48,7 @@ public class KryoSerializer implements Serializer {
         try(ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             Input input = new Input(bis)){
             Kryo kryo = kryoThreadLocal.get();
-            // byte -> obj
+            // byte -> obj 需要对象有构造函数
             Object o = kryo.readObject(input, clazz);
             kryoThreadLocal.remove();
             return clazz.cast(o);

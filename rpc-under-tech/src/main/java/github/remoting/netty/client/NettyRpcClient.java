@@ -55,9 +55,9 @@ public final class NettyRpcClient implements RpcRequestTransport {
                         ChannelPipeline p = ch.pipeline();
                         // If no data is sent to the server within 5 seconds, a heartbeat msg will be sent
                         p.addLast(new IdleStateHandler(0,5,0, TimeUnit.SECONDS));
-                        p.addLast(new NettyRpcClientHandler());
                         p.addLast(new RpcMessageDecoder());
                         p.addLast(new RpcMessageEncoder());
+                        p.addLast(new NettyRpcClientHandler());
                     }
                 });
         this.serviceDiscovery = ExtensionLoader.getExtensionLoader(ServiceDiscovery.class).getExtension("zk");

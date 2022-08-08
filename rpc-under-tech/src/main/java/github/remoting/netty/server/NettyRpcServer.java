@@ -59,13 +59,14 @@ public class NettyRpcServer {
                     // 开启TCP长连接 + 心跳机制
                     .childOption(ChannelOption.SO_KEEPALIVE,true)
                     // 用于临时存放三次握手的请求队列最大长度
-                    .option(ChannelOption.SO_BACKLOG,128)
+                    .option(ChannelOption.SO_BACKLOG,1024)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline p = ch.pipeline();
                             // IdleStateHandler 空闲状态处理器 30 秒之内没有读取到数据就关闭连接
+                            // pipeline 也有处理顺序！
                             p.addLast(new IdleStateHandler(30,0,0, TimeUnit.SECONDS));
                             p.addLast(new RpcMessageDecoder());
                             p.addLast(new RpcMessageEncoder());
@@ -82,6 +83,7 @@ public class NettyRpcServer {
             log.error("shutdown bossGroup and workerGroup");
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+            serviceHandlerGroup.shutdownGracefully();
         }
 
     }
