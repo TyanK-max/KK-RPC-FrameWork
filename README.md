@@ -21,7 +21,7 @@ Socket不解释原理。
 
 
 
-![image-20220727195733773](image\image-20220727195733773.png)
+![image-20220727195733773](./image/image-20220727195733773.png)
 
 NettyRpcClient 为主体，Handler为处理服务器返回消息并且配置心跳机制
 
@@ -63,7 +63,7 @@ Netty 的 EventGroup 自动封装好了多线程Reactor模型
 
 ![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2018/11/1/166cf6b2c711bc0f~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
 
-![image-20220727202524811](image\image-20220727202524811.png)
+![image-20220727202524811](./image/image-20220727202524811.png)
 
 **接下来就是doconnect，getchannel，sendRequest**
 
@@ -114,7 +114,7 @@ Netty 的 EventGroup 自动封装好了多线程Reactor模型
 
 ### NettyClient 服务端 初始化创建过程：
 
-![image-20220727212515998](image\image-20220727212515998.png)
+![image-20220727212515998](./image/image-20220727212515998.png)
 
 实现了一个线程工厂组任务来为Reactor模型提供线程。
 
@@ -133,7 +133,7 @@ DefaultEventExecutorGroup serviceHandlerGroup = new DefaultEventExecutorGroup(
 
 **包类如下**：
 
-**![image-20220728151753623](image\image-20220728151753623.png)**
+**![image-20220728151753623](./image/image-20220728151753623.png)**
 
 主要功能为服务发现和服务注册，使用Curator来搭建连接zookeeper。
 
@@ -381,7 +381,7 @@ public class KryoSerializer implements Serializer {
 
 RpcMessage的头部，后面是data
 
-![image-20220729160829412](image\image-20220729160829412.png)
+![image-20220729160829412](./image/image-20220729160829412.png)
 
 4B  magic code（魔法数）   1B version（版本）   4B full length（消息长度）    1B messageType（消息类型）
 
@@ -574,7 +574,7 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
 
 ​	Client 端发送 request ，server 能够正常接收并且能够成功的解压和解码，但是发送回Client的时候，Client端接受不到数据，debug了一下返回的并不是预期的数据，而是 PooledUnsafeDirectByteBuf(ridx: 0, widx: 166, cap: 2048)，然后上网查找这是什么东西，发现有关的是client和server的编解码不统一，不对啊，我两者使用的都是一样的编解码器，然后从编解码器入手查看，发现在client端
 
-![image-20220808160931149](image\image-20220808160931149.png)
+![image-20220808160931149](./image/image-20220808160931149.png)
 
 这一块地方，由于顺序出错，这样子在管道中addlast，就会导致data先会被ClientHandler接收并处理，这样处理到的数据就是没有被解码的数据，自然无法识别，所以需要把编解码器在Handler前addlast，这样就可以顺利解码了。管道就类似一个流水线，数据在这个流水线上传输并被处理。
 
@@ -584,8 +584,8 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
 
 解决方案：
 
-![image-20220728173423239](image\image-20220728173423239.png)
+![image-20220728173423239](./image/image-20220728173423239.png)
 
-在得到需要删除的服务的IP地址的时候，截取路径名到ip地址前的服务名为止，删除这个节点及其的子节点。![image-20220728173511029](C:\Users\TyanK\AppData\Roaming\Typora\typora-user-images\image-20220728173511029.png)
+在得到需要删除的服务的IP地址的时候，截取路径名到ip地址前的服务名为止，删除这个节点及其的子节点。![image-20220728173511029](./image/image-20220728173511029.png)
 
 **问题即可解决！！！**
