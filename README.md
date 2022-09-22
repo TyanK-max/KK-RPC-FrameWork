@@ -1,6 +1,5 @@
 # KK-RPC-FrameWork
-### 用于个人学习的 RPC 框架
-### reference ： https://github.com/Snailclimb/guide-rpc-framework
+
 
 ## 版块一 （服务器搭建 网络传输）
 
